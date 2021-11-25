@@ -29,11 +29,10 @@ body {
 body,
 html,
 #root {
-    height: 100vh;
+    height: 100% !important;
     /* background-image: linear-gradient(to top, #fbc2eb 0%, #a6c1ee 100%); */
-    //background-color: #101921;
-    //background-color: #22002e;
-    background: linear-gradient(135deg, #060009, #38004a);
+    /* background-color: #101921; */
+    background-color: black;
 }
 
 h2 {
@@ -65,7 +64,7 @@ h5 {
 }
 
 .battle-container {
-    background: linear-gradient(135deg, #060009, #38004a);
+    //background: linear-gradient(135deg, #060009, #38004a);
     /*height: 100vh !important;
     width: 100% !important;*/
 }
@@ -117,11 +116,6 @@ h5 {
     }
 }
 
-
-#hero-container {
-    /*overflow: hidden;*/
-}
-
 #hero-container .avatar-box {
     left: -7px;
     border: 5px solid #03E1FF;
@@ -131,7 +125,7 @@ h5 {
 
 #enemy-container .avatar-box {
     top: 0px;
-    right: 7px;
+    right: -7px;
     border: 5px solid #00FFA3;
     width: 210px;
     height: 210px;
@@ -140,11 +134,21 @@ h5 {
 #battle-container {
     width: 640px;
     height: 640px;
-    outline: 5px double black;
-    background-image: #101921;
+    outline: 5px solid black;
+    background-image: url("./Resources/img/bg.png");
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
+    /* background-color: gray; */
+}
+
+#hero-container {
+    justify-content: space-between;
+    position: relative;
+    top: 60px;
+    left:0px;
+    display: flex;
+    height: 200px;
 }
 
 #enemy-container {
@@ -157,7 +161,7 @@ h5 {
 
 #enemy-info-box {
     background-color: white;
-    width: 55%;
+    width: 100%;
     height: 100px;
     border: 5px solid #00FFA3;
     padding: 5px;
@@ -195,27 +199,15 @@ h5 {
     width: 100%;
 }
 
-#hero-container {
-    justify-content: space-between;
-    position: relative;
-    top: 120px;
-    display: flex;
-    height: 200px;
-}
-
 #hero-name,
 #enemy-name {
-    //display: block;
     letter-spacing: -4px;
-    //text-overflow: ellipsis;
-    //overflow: hidden;
-    //max-width: 80%;
 }
 
 #text-box {
     background-color: #4b4f53;
     position: relative;
-    top: 140px;
+    top: 90px;
     height: 150px;
     margin-left: -0.5rem;
     margin-right: -0.5rem;
@@ -226,7 +218,6 @@ h5 {
 }
 
 #text-box-content {
-    background-image: linear-gradient(45deg, #DC1FFF, #7F01D2);
     height: 130px;
     border-radius: 5px;
     -moz-box-sizing: border-box;
@@ -235,24 +226,19 @@ h5 {
 }
 
 .attack-container {
-    border-color: #999999;
-    border-style: solid;
-    border-width: 1px;
-    cursor: pointer;
+    background-image: linear-gradient(45deg, #DC1FFF, #7F01D2);
     width: 50%;
     display: inline-block;
     height: 50%;
     line-height: 60px;
     text-align: center;
-    transition: background-color 0.2s ease-in 0s;
-}
-
-.attack-container:hover {
-    background-color: #7F01D2;
+    border: 2px solid black;
+    border-radius: 5px;
+    font-weight: bold;
 }
 
 .move-pointer {
-    
+    cursor: pointer;
     padding: 2px 5px;
     font-size: 18px;
     color: white;
@@ -261,6 +247,7 @@ h5 {
 .battle-text-content {
     padding: 13px 13px 0px 13px;
     font-size: 18px;
+    font: medium;
     color: white;
     height: 80px;
 }
@@ -276,29 +263,34 @@ h5 {
 @media screen and (min-width: 769px) {
     .move-pointer:hover,
     #play-again-text:hover {
-        //color: #c9def8;
+        color: #c9def8;
     }
 }
 
 .parallelogram {
-    width: 75px;
+    width: 50px;
     height: 50px;
     transform: skew(20deg);
 }
 
 .team-image {
-    width: 70px;
-    height: 45px;
+    width: 47px;
+    height: 47px;
 }
 
 .team-container {
     /* background-color: white; */
-    width: 100%;
+    width: 30%;
     height: 50px;
+    margin: auto;
     /* border: 5px solid #03E1FF; */
     padding: 5px;
     /* border-radius: 14px 7px 14px 7px; */
     letter-spacing: -2px;
+}
+
+.fainted {
+    filter: grayscale(100%);
 }
 
 .hero-border {
@@ -307,4 +299,9 @@ h5 {
 
 .enemy-border {
     border: solid #00FFA3;
+}
+
+.active-dino {
+    border: solid yellow;
+    filter:drop-shadow(0px 0px 5px yellow)
 }

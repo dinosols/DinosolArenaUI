@@ -192,6 +192,7 @@ async function getGameMetadata(token) {
 
 async function createDinosolMap() {
     let dinoMap = {};
+    while (!window.solana);
     let result = await window.solana.connect();
 
     // Grab a list of the compatible NFTs from the player's wallet.
