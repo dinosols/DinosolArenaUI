@@ -217,6 +217,8 @@ function BattleInterface(props) {
         let connection = new Connection("https://api.devnet.solana.com");
         let instructions = [];
 
+        setTextMessageOne(`${props.dinomap[props.player].dinosolName} used ${name} for ${damage} damage!`);
+        
         let playerdino = props.dinomap[props.player]
         console.log("Player Pubkey: " + playerdino.dinosolId);
         console.log("Opponent Pubkey: " + props.opponent.dinosolId);
@@ -277,8 +279,6 @@ function BattleInterface(props) {
                             connection.confirmTransaction(res.txid, 'max').then(() => {
                                 // Force wait for max confirmations
                                 connection.getParsedConfirmedTransaction(res.txid, 'confirmed').then(() => {
-                                    setTextMessageOne(`${props.dinomap[props.player].dinosolName} used ${name} for ${damage} damage!`);
-
                                     // once the state is changed, start enemy turn
                                     enemyTurn(playerPubkey, opponentPubkey, playerMetaPDA, opponentMetaPDA).then(() => { return; });
                                 });
