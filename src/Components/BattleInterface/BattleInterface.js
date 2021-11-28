@@ -35,6 +35,7 @@ import {
 } from '@solana/web3.js';
 import { serialize } from 'borsh';
 import { getMetadataPDA } from '../../accounts';
+import { moveIdToName } from '../../helpers';
 
 const METADATA_PUBKEY = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
 const GAME_METADATA_PUBKEY = new PublicKey("4iqJsF4JLz8iLuvMxYvHchtG3wqiZdsNEp1EGPphKVXw");
@@ -48,6 +49,7 @@ function BattleInterface(props) {
     const [enemyFaint, setEnemyFaint] = useState(null);
     const [textMessageOne, setTextMessageOne] = useState("");
     const [textMessageTwo, setTextMessageTwo] = useState("");
+    const [attacking, setAttacking] = useState(false);
 
     useEffect(() => {
         setPlayerHP(props.dinomap[props.player].dinosolHP);
@@ -71,35 +73,55 @@ function BattleInterface(props) {
         }, 1000);
     };
 
+    async function playerTurn(playerPubkey, opponentPubkey, playerMetaPDA, opponentMetaPDA, newMove) {
+        // TODO: Single env instance.
+        let connection = new Connection("https://api.devnet.solana.com");
+        let instructions = [];
+
+        const p1MoveArgs =
+            new SubmitActionArgs({
+                move: new Move(newMove),
+            });
+
+        let p1TxnData = Buffer.from(
+            serialize(
+                BATTLE_SCHEMA,
+                p1MoveArgs,
+            ),
+        );
+
+        instructions.push(
+            submitActionInstruction(
+                props.battleaccount,
+                window.solana.publicKey,
+                playerMetaPDA,
+                opponentMetaPDA,
+                GAME_METADATA_PUBKEY,
+                window.solana.publicKey,
+                p1TxnData,
+                BATTLE_PUBKEY,
+            ),
+        );
+
+        try {
+            const res = await sendTransactionPhantom(
+                connection,
+                window.solana,
+                instructions,
+            )
+
+            await connection.confirmTransaction(res.txid, 'max')
+            // Force wait for max confirmations
+            await connection.getParsedConfirmedTransaction(res.txid, 'confirmed')
+        } catch (e) {
+            console.log(e);
+            // ignore
+        }
+    }
+
     async function enemyTurn(playerPubkey, opponentPubkey, playerMetaPDA, opponentMetaPDA) {
         let connection = new Connection("https://api.devnet.solana.com");
         let instructions = [];
-        let enemyMoved = false;
-
-        while (!enemyMoved) {
-            const battlePubKey = props.battleaccount;
-            const battleAccountInfo = await connection.getAccountInfo(battlePubKey);
-            const battle = decodeBattle(battleAccountInfo.data);
-
-            console.log(battle);
-            let opponentMove;
-            if (battle.player_1.wallet.toString() === window.solana.publicKey.toString()) {
-                console.log("Waiting for player 2 to move.");
-                opponentMove = battle.player_2.current_move;
-            }
-            else if (battle.player_2.wallet.toString() === window.solana.publicKey.toString()) {
-                console.log("Waiting for player 1 to move.");
-                opponentMove = battle.player_1.current_move;
-            }
-
-            if (opponentMove) {
-                enemyMoved = (opponentMove.move_id !== 0);
-            }
-            console.log(JSON.stringify(opponentMove));
-        }
-
-        console.log("Opponent has moved!");
-
         let playerMeta = await getGameMetadata(playerPubkey.toString());
         let opponentMeta = await getGameMetadata(opponentPubkey.toString());
 
@@ -184,38 +206,12 @@ function BattleInterface(props) {
 
         playerMeta = await getGameMetadata(playerPubkey.toString());
         opponentMeta = await getGameMetadata(opponentPubkey.toString());
-        setPlayerHP(playerMeta.currStats.health);
-        setEnemyHP(opponentMeta.currStats.health);
 
-        if (opponentMeta.currStats.health === 0) {
-            console.log("Entered Enemy Faint Phase");
-            setTextMessageOne(`${props.opponent.dinosolName} fainted.`);
-            setTextMessageTwo(`${props.dinomap[props.player].dinosolName} wins!`);
-            setEnemyFaint(true);
-
-            await endBattle(connection, playerMetaPDA);
-            setTimeout(() => {
-                setGameOver(true);
-            }, 3000);
-        } else if (playerMeta.currStats.health === 0) {
-            console.log("Entered Player Faint Phase");
-            setTextMessageOne(`${props.dinomap[props.player].dinosolName} fainted.`);
-            setTextMessageTwo(`${props.opponent.dinosolName} wins!`);
-            setPlayerFaint(true);
-
-            await endBattle(connection, playerMetaPDA);
-            setTimeout(() => {
-                setGameOver(true);
-            }, 3000);
-        }
-        setTextMessageOne("");
-        setTextMessageTwo("");
     };
 
-    function handleAttackClick(name, damage) {
-        // TODO: Single env instance.
+    function handleAttackClick(name, damage, setAttacking) {
+        setAttacking(true);
         let connection = new Connection("https://api.devnet.solana.com");
-        let instructions = [];
 
         let playerdino = props.dinomap[props.player]
         console.log("Player Pubkey: " + playerdino.dinosolId);
@@ -223,75 +219,144 @@ function BattleInterface(props) {
 
         let playerPubkey = new PublicKey(playerdino.dinosolId);
         let opponentPubkey = new PublicKey(props.opponent.dinosolId);
-        getGameMetadata(playerPubkey).then(metadata => {
-
+        getGameMetadata(playerPubkey).then(playerMetadata => {
             let newMove;
             if (name === playerdino.dinosolAttacks[0].attackName) {
-                newMove = metadata.move0;
+                newMove = playerMetadata.move0;
             } else if (name === playerdino.dinosolAttacks[1].attackName) {
-                newMove = metadata.move1;
+                newMove = playerMetadata.move1;
             } else if (name === playerdino.dinosolAttacks[2].attackName) {
-                newMove = metadata.move2;
+                newMove = playerMetadata.move2;
             } else if (name === playerdino.dinosolAttacks[3].attackName) {
-                newMove = metadata.move3;
+                newMove = playerMetadata.move3;
             } else {
                 console.log("Invalid move selected.");
             }
 
             console.log("Selected Move: " + JSON.stringify(newMove));
 
-            const p1MoveArgs =
-                new SubmitActionArgs({
-                    move: new Move(newMove),
-                });
+            getGameMetadata(opponentPubkey).then(opponentMetadata => {
+                getMetadataPDA(playerPubkey, GAME_METADATA_PUBKEY).then(playerMetaPDA => {
+                    getMetadataPDA(opponentPubkey, GAME_METADATA_PUBKEY).then(opponentMetaPDA => {
+                        console.log("Player faster");
+                        playerTurn(playerPubkey, opponentPubkey, playerMetaPDA, opponentMetaPDA, newMove).then(() => {
+                            setEnemyHP(Math.max(0, opponentMetadata.currStats.health - playerMetadata.currStats.attack));
+                            setTextMessageOne(`${props.dinomap[props.player].dinosolName} used ${name} for ${damage} damage!`);
+                            // once the state is changed, start enemy turn
+                            waitForOpponent().then(({ battle, playerNum }) => {
+                                console.log("Opponent has moved!");
+                                let moveId;
+                                let oppDamage;
+                                if (playerNum === 1) {
+                                    moveId = battle.player_2.current_move.move_id;
+                                }
+                                else if (playerNum === 2) {
+                                    moveId = battle.player_1.current_move.move_id;
+                                }
+                                else {
+                                    console.log("Should not happen.");
+                                }
+                                oppDamage = opponentMetadata.currStats.attack;
+                                enemyTurn(playerPubkey, opponentPubkey, playerMetaPDA, opponentMetaPDA).then(() => {
+                                    if (opponentMetadata.currStats.health !== 0) {
+                                        setTextMessageTwo(`Opponent ${props.opponent.dinosolName} used ${moveIdToName(moveId)} for ${oppDamage} damage!`);
+                                    }
+                                    getGameMetadata(opponentPubkey).then(opponentMetadata => {
+                                        getGameMetadata(playerPubkey).then(playerMetadata => {
+                                            if (opponentMetadata.currStats.health !== 0) {
+                                                setPlayerHP(playerMetadata.currStats.health);
+                                            }
+                                            //sleep(3000);
 
-            let p1TxnData = Buffer.from(
-                serialize(
-                    BATTLE_SCHEMA,
-                    p1MoveArgs,
-                ),
-            );
+                                            if (opponentMetadata.currStats.health === 0) {
+                                                console.log("Entered Enemy Faint Phase");
+                                                setTextMessageOne(`${props.opponent.dinosolName} fainted.`);
+                                                setTextMessageTwo(`${props.dinomap[props.player].dinosolName} wins!`);
+                                                setEnemyFaint(true);
 
-            getMetadataPDA(playerPubkey, GAME_METADATA_PUBKEY).then(playerMetaPDA => {
-                getMetadataPDA(opponentPubkey, GAME_METADATA_PUBKEY).then(opponentMetaPDA => {
-                    instructions.push(
-                        submitActionInstruction(
-                            props.battleaccount,
-                            window.solana.publicKey,
-                            playerMetaPDA,
-                            opponentMetaPDA,
-                            GAME_METADATA_PUBKEY,
-                            window.solana.publicKey,
-                            p1TxnData,
-                            BATTLE_PUBKEY,
-                        ),
-                    );
+                                                endBattle(connection, playerMetaPDA).then(() => {
+                                                    setTimeout(() => {
+                                                        setGameOver(true);
+                                                        setTextMessageOne("");
+                                                        setTextMessageTwo("");
+                                                    }, 3000);
+                                                });
+                                            } else if (playerMetadata.currStats.health === 0) {
+                                                console.log("Entered Player Faint Phase");
+                                                setTextMessageOne(`${props.dinomap[props.player].dinosolName} fainted.`);
+                                                setTextMessageTwo(`${props.opponent.dinosolName} wins!`);
+                                                setPlayerFaint(true);
 
-                    try {
-                        sendTransactionPhantom(
-                            connection,
-                            window.solana,
-                            instructions,
-                        ).then(res => {
-
-                            connection.confirmTransaction(res.txid, 'max').then(() => {
-                                // Force wait for max confirmations
-                                connection.getParsedConfirmedTransaction(res.txid, 'confirmed').then(() => {
-                                    setTextMessageOne(`${props.dinomap[props.player].dinosolName} used ${name} for ${damage} damage!`);
-
-                                    // once the state is changed, start enemy turn
-                                    enemyTurn(playerPubkey, opponentPubkey, playerMetaPDA, opponentMetaPDA).then(() => { return; });
+                                                endBattle(connection, playerMetaPDA).then(() => {
+                                                    setTimeout(() => {
+                                                        setGameOver(true);
+                                                        setTextMessageOne("");
+                                                        setTextMessageTwo("");
+                                                    }, 3000);
+                                                });
+                                            }
+                                            else {
+                                                setTimeout(() => {
+                                                    setTextMessageOne("");
+                                                    setTextMessageTwo("");
+                                                }, 3000);
+                                            }
+                                        });
+                                    });
                                 });
                             });
                         });
-                    } catch (e) {
-                        console.log(e);
-                        // ignore
-                    }
+                    });
                 });
             });
         });
+        setAttacking(false);
+
+        async function waitForOpponent() {
+            let enemyMoved = false;
+            let battle;
+            let playerNum;
+            while (!enemyMoved) {
+                const battlePubKey = props.battleaccount;
+                const battleAccountInfo = await connection.getAccountInfo(battlePubKey)
+                battle = decodeBattle(battleAccountInfo.data);
+
+                //console.log(battle);
+                let opponentMove;
+                if (battle.player_1.wallet.toString() === window.solana.publicKey.toString()) {
+                    console.log("Waiting for player 2 to move.");
+                    opponentMove = battle.player_2.current_move;
+                    playerNum = 1;
+                }
+                else if (battle.player_2.wallet.toString() === window.solana.publicKey.toString()) {
+                    console.log("Waiting for player 1 to move.");
+                    opponentMove = battle.player_1.current_move;
+                    playerNum = 2;
+                }
+                else {
+                    console.log("Should not happen");
+                }
+
+                if (opponentMove) {
+                    enemyMoved = (opponentMove.move_id !== 0);
+                }
+                console.log(JSON.stringify(opponentMove));
+            }
+            return { battle, playerNum };
+        }
     };
+
+    function sleep(milliseconds) {
+        const date = Date.now();
+        let currentDate = null;
+        do {
+            currentDate = Date.now();
+        } while (currentDate - date < milliseconds);
+    }
+
+    function setButtonDisabled(val) {
+        //setAttacking
+    }
 
     return (
         <div className=" battle-container" >
@@ -336,6 +401,8 @@ function BattleInterface(props) {
                                                 index={index}
                                                 details={props.dinomap[props.player].dinosolAttacks[key]}
                                                 handleAttackClick={handleAttackClick}
+                                                disabled={attacking}
+                                                setAttacking={setAttacking}
                                             />
                                         );
                                     })
@@ -369,7 +436,7 @@ async function getGameMetadata(token) {
 
     const metadataAccountInfo = await connection.getAccountInfo(metadataAccount);
     const metadata = decodeMetadata(metadataAccountInfo.data);
-    console.log(metadata);
+    //console.log(metadata);
     return metadata;
 }
 
