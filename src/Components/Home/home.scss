@@ -44,7 +44,15 @@
             .main-menu-option:hover {
                 font-size: 3.0em;
             }
-    
+
+            a {
+                color: #fafafa;
+                -webkit-text-stroke-width: 1px;
+                -webkit-text-stroke-color: #222222;
+                padding-top: 10%;
+                user-select: none;
+                text-decoration: none;
+            }
         }
 
         #home-decor {
