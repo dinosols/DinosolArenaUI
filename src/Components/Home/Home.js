@@ -13,7 +13,7 @@ function Home(props) {
                     <ul id="home-menu-options">
                         <li className="main-menu-option" onClick={props.viewupdate.bind(null, 1)} >Start Battle!</li><br />
                         <li className="main-menu-option" onClick={props.viewupdate.bind(null, 7)} >Join Battle!</li><br />
-                        <li className="main-menu-option" onClick={props.viewupdate.bind(null, 3)} >Leaderboards</li><br />
+                        <li className="main-menu-option" style={{color:'gray'}}/*onClick={props.viewupdate.bind(null, 3)}*/ >Leaderboards</li><br />
                         <li className="main-menu-option" onClick={props.viewupdate.bind(null, 4)} >View My Dinosols</li><br />
                         <li className="main-menu-option" onClick={props.viewupdate.bind(null, 6)} >Buy Dinosols</li><br />
                         <li className="main-menu-option" onClick={props.viewupdate.bind(null, 8)} >Developer Menu</li><br />
