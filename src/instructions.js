@@ -309,7 +309,7 @@ function submitActionInstruction(battleAccount, playerAccount, playerTeamMember,
         {
             pubkey: opponentTeamMember,
             isSigner: false,
-            isWritable: false
+            isWritable: true
         },
         {
             pubkey: metadataProgramID,

@@ -59,6 +59,7 @@ async function heal(props, setMetaText, getMeta) {
             defense: metadata.currStats.defense,
             speed: metadata.currStats.speed,
             agility: metadata.currStats.agility,
+            rage_points: metadata.currStats.rage_points,
         });
 
         const statsArgs =

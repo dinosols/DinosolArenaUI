@@ -79,7 +79,7 @@ var getMetadataPDA = function (mint, token_game_metadata_program_id) { return __
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, anchor.web3.PublicKey.findProgramAddress([
-                    Buffer.from('gamemeta'),
+                    Buffer.from('gamemetav1'),
                     token_game_metadata_program_id.toBuffer(),
                     mint.toBuffer(),
                 ], token_game_metadata_program_id)];
@@ -92,7 +92,7 @@ var getBattlePDA = function (player, battle_program_id, dateString) { return __a
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0: return [4 /*yield*/, anchor.web3.PublicKey.findProgramAddress([
-                    Buffer.from('battle'),
+                    Buffer.from('battlev1'),
                     battle_program_id.toBuffer(),
                     player.toBuffer(),
                     Buffer.from(dateString),
@@ -115,21 +115,21 @@ function mintToken(provider, mintOwner) {
                     mintRent = _b.sent();
                     mint = anchor.web3.Keypair.generate();
                     instructions.push(web3_js_1.SystemProgram.createAccount({
-                        fromPubkey: mintOwner,
+                        fromPubkey: mintOwner.publicKey,
                         newAccountPubkey: mint.publicKey,
                         lamports: mintRent,
                         space: spl_token_1.MintLayout.span,
                         programId: constants_1.TOKEN_PROGRAM_ID
                     }));
-                    instructions.push(spl_token_1.Token.createInitMintInstruction(constants_1.TOKEN_PROGRAM_ID, mint.publicKey, 0, mintOwner, mintOwner));
-                    return [4 /*yield*/, (0, exports.getTokenWallet)(mintOwner, mint.publicKey)];
+                    instructions.push(spl_token_1.Token.createInitMintInstruction(constants_1.TOKEN_PROGRAM_ID, mint.publicKey, 0, mintOwner.publicKey, mintOwner.publicKey));
+                    return [4 /*yield*/, (0, exports.getTokenWallet)(mintOwner.publicKey, mint.publicKey)];
                 case 2:
                     userTokenAccountAddress = _b.sent();
-                    instructions.push((0, instructions_1.createAssociatedTokenAccountInstruction)(userTokenAccountAddress, mintOwner, mintOwner, mint.publicKey));
-                    instructions.push(spl_token_1.Token.createMintToInstruction(constants_1.TOKEN_PROGRAM_ID, mint.publicKey, userTokenAccountAddress, mintOwner, [], 1));
+                    instructions.push((0, instructions_1.createAssociatedTokenAccountInstruction)(userTokenAccountAddress, mintOwner.publicKey, mintOwner.publicKey, mint.publicKey));
+                    instructions.push(spl_token_1.Token.createMintToInstruction(constants_1.TOKEN_PROGRAM_ID, mint.publicKey, userTokenAccountAddress, mintOwner.publicKey, [], 1));
                     return [4 /*yield*/, (0, transactions_1.sendTransactionWithRetryWithKeypair)(provider.connection, 
                         // @ts-ignore
-                        provider.wallet.payer, instructions, [mint])];
+                        mintOwner, instructions, [mint])];
                 case 3:
                     res = _b.sent();
                     _b.label = 4;
@@ -157,41 +157,79 @@ exports.mintToken = mintToken;
 function getRandomInt(max) {
     return Math.floor(Math.random() * max);
 }
+function random_choice(choices) {
+    var index = Math.floor(Math.random() * choices.length);
+    return choices[index];
+}
 var createRandomGameMetadataArgs = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var baseStats, levelStats, currStats, move0, move1, move2, move3, gameMetadataArgs;
+    var baseStats, levelStats, currStats, moves, move0, move1, move2, move3, gameMetadataArgs;
     return __generator(this, function (_a) {
         baseStats = new schema_1.Stats({
             health: getRandomInt(10) + 1,
             attack: getRandomInt(5) + 1,
             defense: getRandomInt(5) + 1,
             speed: getRandomInt(5) + 1,
-            agility: getRandomInt(5) + 1
+            agility: getRandomInt(5) + 1,
+            rage_points: getRandomInt(5)
         });
         levelStats = new schema_1.Stats(JSON.parse(JSON.stringify(baseStats)));
         currStats = new schema_1.Stats(JSON.parse(JSON.stringify(baseStats)));
+        moves = ["", "Bite", "Stab", "Charge"];
         move0 = new schema_1.Move({
-            move_id: getRandomInt(13) + 1,
-            damage_modifier: getRandomInt(5),
-            status_effect_chance: getRandomInt(10),
-            status_effect: getRandomInt(3)
+            move_name: "Bite",
+            stats_modifier: new schema_1.Stats({
+                health: getRandomInt(10) + 1,
+                attack: getRandomInt(5) + 1,
+                defense: getRandomInt(5) + 1,
+                speed: getRandomInt(5) + 1,
+                agility: getRandomInt(5) + 1,
+                rage_points: getRandomInt(5)
+            }),
+            move_speed: getRandomInt(10),
+            status_effect: getRandomInt(3),
+            status_effect_chance: getRandomInt(10)
         });
         move1 = new schema_1.Move({
-            move_id: getRandomInt(14),
-            damage_modifier: getRandomInt(5),
-            status_effect_chance: getRandomInt(10),
-            status_effect: getRandomInt(3)
+            move_name: random_choice(moves),
+            stats_modifier: new schema_1.Stats({
+                health: getRandomInt(10) + 1,
+                attack: getRandomInt(5) + 1,
+                defense: getRandomInt(5) + 1,
+                speed: getRandomInt(5) + 1,
+                agility: getRandomInt(5) + 1,
+                rage_points: getRandomInt(5)
+            }),
+            move_speed: getRandomInt(10),
+            status_effect: getRandomInt(3),
+            status_effect_chance: getRandomInt(10)
         });
         move2 = new schema_1.Move({
-            move_id: getRandomInt(14),
-            damage_modifier: getRandomInt(5),
-            status_effect_chance: getRandomInt(10),
-            status_effect: getRandomInt(3)
+            move_name: random_choice(moves),
+            stats_modifier: new schema_1.Stats({
+                health: getRandomInt(10) + 1,
+                attack: getRandomInt(5) + 1,
+                defense: getRandomInt(5) + 1,
+                speed: getRandomInt(5) + 1,
+                agility: getRandomInt(5) + 1,
+                rage_points: getRandomInt(5)
+            }),
+            move_speed: getRandomInt(10),
+            status_effect: getRandomInt(3),
+            status_effect_chance: getRandomInt(10)
         });
         move3 = new schema_1.Move({
-            move_id: getRandomInt(14),
-            damage_modifier: getRandomInt(5),
-            status_effect_chance: getRandomInt(10),
-            status_effect: getRandomInt(3)
+            move_name: random_choice(moves),
+            stats_modifier: new schema_1.Stats({
+                health: getRandomInt(10) + 1,
+                attack: getRandomInt(5) + 1,
+                defense: getRandomInt(5) + 1,
+                speed: getRandomInt(5) + 1,
+                agility: getRandomInt(5) + 1,
+                rage_points: getRandomInt(5)
+            }),
+            move_speed: getRandomInt(10),
+            status_effect: getRandomInt(3),
+            status_effect_chance: getRandomInt(10)
         });
         gameMetadataArgs = new schema_1.CreateGameMetadataArgs({
             experience: 0,
@@ -199,10 +237,8 @@ var createRandomGameMetadataArgs = function () { return __awaiter(void 0, void 0
             baseStats: baseStats,
             levelStats: levelStats,
             currStats: currStats,
-            move0: move0,
-            move1: move1,
-            move2: move2,
-            move3: move3
+            status_effect: 0,
+            moves: [move0, move1, move2, move3]
         });
         return [2 /*return*/, gameMetadataArgs];
     });

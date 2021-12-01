@@ -74,41 +74,42 @@ function BattleInterface(props) {
     async function enemyTurn(playerPubkey, opponentPubkey, playerMetaPDA, opponentMetaPDA) {
         let connection = new Connection("https://api.devnet.solana.com");
         let instructions = [];
-        let enemyMoved = false;
+        let movesProcessed = false;
 
-        while (!enemyMoved) {
+        while (!movesProcessed) {
             const battlePubKey = props.battleaccount;
             const battleAccountInfo = await connection.getAccountInfo(battlePubKey);
             const battle = decodeBattle(battleAccountInfo.data);
-
+    
             console.log(battle);
-            let opponentMove;
+            let playerMove;
             if (battle.player_1.wallet.toString() === window.solana.publicKey.toString()) {
                 console.log("Waiting for player 2 to move.");
-                opponentMove = battle.player_2.current_move;
+                playerMove = battle.player_1.current_move;
             }
             else if (battle.player_2.wallet.toString() === window.solana.publicKey.toString()) {
                 console.log("Waiting for player 1 to move.");
-                opponentMove = battle.player_1.current_move;
+                playerMove = battle.player_2.current_move;
             }
-
-            if (opponentMove) {
-                enemyMoved = (opponentMove.move_id !== 0);
+    
+            if (playerMove) {
+                movesProcessed = (playerMove.move_name === "");
             }
-            console.log(JSON.stringify(opponentMove));
+            console.log(JSON.stringify(playerMove));
         }
 
         console.log("Opponent has moved!");
 
         let playerMeta = await getGameMetadata(playerPubkey.toString());
         let opponentMeta = await getGameMetadata(opponentPubkey.toString());
-
+/*
         const new_stats = new Stats({
             health: Math.max(0, playerMeta.currStats.health - opponentMeta.currStats.attack),
             attack: playerMeta.currStats.attack,
             defense: playerMeta.currStats.defense,
             speed: playerMeta.currStats.speed,
             agility: playerMeta.currStats.agility,
+            rage_points: playerMeta.currStats.rage_points,
         });
 
         const newStatsArgs =
@@ -166,9 +167,9 @@ function BattleInterface(props) {
 
         // Force wait for max confirmations
         await connection.getParsedConfirmedTransaction(res.txid, 'confirmed');
-
+*/
         instructions = [];
-
+/*
         let bothMovesDone = false;
         while (!bothMovesDone) {
             const battlePubKey = props.battleaccount;
@@ -177,10 +178,11 @@ function BattleInterface(props) {
 
             console.log(battle);
 
-            if (battle.player_1.current_move.move_id === 0 && battle.player_2.current_move.move_id === 0) {
+            if (battle.player_1.current_move.move_name === "" && battle.player_2.current_move.move_name === "") {
                 bothMovesDone = true;
             }
         }
+        */
 
         playerMeta = await getGameMetadata(playerPubkey.toString());
         opponentMeta = await getGameMetadata(opponentPubkey.toString());
@@ -218,7 +220,7 @@ function BattleInterface(props) {
         let instructions = [];
 
         setTextMessageOne(`${props.dinomap[props.player].dinosolName} used ${name} for ${damage} damage!`);
-        
+
         let playerdino = props.dinomap[props.player]
         console.log("Player Pubkey: " + playerdino.dinosolId);
         console.log("Opponent Pubkey: " + props.opponent.dinosolId);
@@ -229,13 +231,13 @@ function BattleInterface(props) {
 
             let newMove;
             if (name === playerdino.dinosolAttacks[0].attackName) {
-                newMove = metadata.move0;
+                newMove = metadata.moves[0];
             } else if (name === playerdino.dinosolAttacks[1].attackName) {
-                newMove = metadata.move1;
+                newMove = metadata.moves[1];
             } else if (name === playerdino.dinosolAttacks[2].attackName) {
-                newMove = metadata.move2;
+                newMove = metadata.moves[2];
             } else if (name === playerdino.dinosolAttacks[3].attackName) {
-                newMove = metadata.move3;
+                newMove = metadata.moves[3];
             } else {
                 console.log("Invalid move selected.");
             }
@@ -247,6 +249,7 @@ function BattleInterface(props) {
                     move: new Move(newMove),
                 });
 
+                console.log(p1MoveArgs);
             let p1TxnData = Buffer.from(
                 serialize(
                     BATTLE_SCHEMA,
@@ -360,7 +363,7 @@ async function getGameMetadata(token) {
     let connection = new Connection("https://api.devnet.solana.com");
 
     let [metadataAccount, bump] = await PublicKey.findProgramAddress([
-        Buffer.from("gamemeta"),
+        Buffer.from("gamemetav1"),
         GAME_METADATA_PUBKEY.toBuffer(),
         new PublicKey(token).toBuffer(),
     ], GAME_METADATA_PUBKEY);
@@ -449,6 +452,7 @@ async function endBattle(connection, playerMetaPDA) {
         defense: metadata.currStats.defense,
         speed: metadata.currStats.speed,
         agility: metadata.currStats.agility,
+        rage_points: metadata.currStats.rage_points,
     });
 
     const statsArgs =

@@ -62,7 +62,7 @@ async function getGameMetadata(token) {
 
     // Grab the Game Metadata PDA.
     let [metadataAccount, bump] = await PublicKey.findProgramAddress([
-        Buffer.from("gamemeta"),
+        Buffer.from("gamemetav1"),
         GAME_METADATA_PUBKEY.toBuffer(),
         new PublicKey(token).toBuffer(),
     ], GAME_METADATA_PUBKEY);

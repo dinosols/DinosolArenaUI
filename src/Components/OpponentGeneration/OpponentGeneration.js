@@ -211,31 +211,31 @@ async function getOpponent(props) {
         dinosolAttacks: [
             {
                 attackDamage: gamemeta.currStats.attack,
-                attackEffect: gamemeta.move0.status_effect,
-                attackName: moveIdToName(gamemeta.move0.move_id),
+                attackEffect: gamemeta.moves[0].status_effect,
+                attackName: gamemeta.moves[0].move_name,
                 criticalChance: 0,
-                effectChance: gamemeta.move0.status_effect_chance,
+                effectChance: gamemeta.moves[0].status_effect_chance,
             },
             {
                 attackDamage: gamemeta.currStats.attack,
-                attackEffect: gamemeta.move1.status_effect,
-                attackName: moveIdToName(gamemeta.move1.move_id),
+                attackEffect: gamemeta.moves[1].status_effect,
+                attackName: gamemeta.moves[1].move_name,
                 criticalChance: 0,
-                effectChance: gamemeta.move1.status_effect_chance,
+                effectChance: gamemeta.moves[1].status_effect_chance,
             },
             {
                 attackDamage: gamemeta.currStats.attack,
-                attackEffect: gamemeta.move2.status_effect,
-                attackName: moveIdToName(gamemeta.move2.move_id),
+                attackEffect: gamemeta.moves[2].status_effect,
+                attackName: gamemeta.moves[2].move_name,
                 criticalChance: 0,
-                effectChance: gamemeta.move2.status_effect_chance,
+                effectChance: gamemeta.moves[2].status_effect_chance,
             },
             {
                 attackDamage: gamemeta.currStats.attack,
-                attackEffect: gamemeta.move3.status_effect,
-                attackName: moveIdToName(gamemeta.move3.move_id),
+                attackEffect: gamemeta.moves[3].status_effect,
+                attackName: gamemeta.moves[3].move_name,
                 criticalChance: 0,
-                effectChance: gamemeta.move3.status_effect_chance,
+                effectChance: gamemeta.moves[3].status_effect_chance,
             },
         ],
     };
@@ -407,7 +407,7 @@ async function getGameMetadata(token) {
     let connection = new Connection("https://api.devnet.solana.com");
 
     let [metadataAccount, bump] = await PublicKey.findProgramAddress([
-        Buffer.from("gamemeta"),
+        Buffer.from("gamemetav1"),
         GAME_METADATA_PUBKEY.toBuffer(),
         new PublicKey(token).toBuffer(),
     ], GAME_METADATA_PUBKEY);
