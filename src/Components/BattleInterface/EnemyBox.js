@@ -51,7 +51,7 @@ export class EnemyBox extends Component {
               </div>
               <div className="ml-3 mr-3 float-right">
                 <h5>
-                  {this.props.enemyHP}/{this.props.enemyMaxHP}
+                  {Math.floor(this.props.enemyHP)}/{Math.floor(this.props.enemyMaxHP)}
                 </h5>
               </div>
             </div>

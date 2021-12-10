@@ -138,7 +138,7 @@ function renderCurrentView(currView,
 async function getNFTs() {
     let connection = new Connection("https://api.devnet.solana.com");
     // Get all token accounts for this wallet
-    const accounts = await connection.getParsedTokenAccountsByOwner(new PublicKey(window.solana.publicKey.toString()), { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") });
+    const accounts = await connection.getParsedTokenAccountsByOwner(new PublicKey("DhYCi6pvfhJkPRpt5RjYwsE1hZw84iu6twbRt9B6dYLV"), { programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA") });
 
     // Grab the NFTs (supply is 1 and decimals is 0)
     let tokens = [];
@@ -162,7 +162,8 @@ async function getNFTs() {
             let metadata = await programs.metadata.Metadata.load(connection, metadataAccount)
             // TODO: This is a terrible criteria to filter on. Replace with something better. We might just want to check that a Game Metadata exists?
             // Check that it's a valid Dinosol for battling.
-            if (metadata.data.updateAuthority === '3HxqsUguP6E7CNqjvpEAnJ8v86qbyJgWvN2idAKygLdD' && metadata.data.data.name.includes('Test Dinosol')) {
+            if (metadata.data.updateAuthority === '3HxqsUguP6E7CNqjvpEAnJ8v86qbyJgWvN2idAKygLdD' && metadata.data.data.name.includes('Test Dinosol') ||
+                metadata.data.updateAuthority === 'PoWbSu5iThzzuAnPnStwAxk3BSVUUZYzHC4feArhscr' && metadata.data.data.name.includes('Dinosol #')) {
                 metadatas.push({ "token": token, "metadata": metadata });
             }
         } catch (e) {
@@ -216,32 +217,33 @@ async function createDinosolMap() {
             dinosolId: account.token,
             dinosolImage: data.image,
             dinosolLevel: gamemeta.level,
+            battleAuth: gamemeta.battleAuthority,
             dinosolName: account.metadata.data.data.name,
             dinosolAttributes: data.attributes,
             dinosolAttacks: [
                 {
-                    attackDamage: gamemeta.currStats.attack,
+                    attackDamage: Math.floor(gamemeta.currStats.attack * gamemeta.moves[0].stats_modifier.attack),
                     attackEffect: gamemeta.moves[0].status_effect,
                     attackName: gamemeta.moves[0].move_name,
                     criticalChance: 0,
                     effectChance: gamemeta.moves[0].status_effect_chance,
                 },
                 {
-                    attackDamage: gamemeta.currStats.attack,
+                    attackDamage: Math.floor(gamemeta.currStats.attack * gamemeta.moves[1].stats_modifier.attack),
                     attackEffect: gamemeta.moves[1].status_effect,
                     attackName: gamemeta.moves[1].move_name,
                     criticalChance: 0,
                     effectChance: gamemeta.moves[1].status_effect_chance,
                 },
                 {
-                    attackDamage: gamemeta.currStats.attack,
+                    attackDamage: Math.floor(gamemeta.currStats.attack * gamemeta.moves[2].stats_modifier.attack),
                     attackEffect: gamemeta.moves[2].status_effect,
                     attackName: gamemeta.moves[2].move_name,
                     criticalChance: 0,
                     effectChance: gamemeta.moves[2].status_effect_chance,
                 },
                 {
-                    attackDamage: gamemeta.currStats.attack,
+                    attackDamage: Math.floor(gamemeta.currStats.attack * gamemeta.moves[3].stats_modifier.attack),
                     attackEffect: gamemeta.moves[3].status_effect,
                     attackName: gamemeta.moves[3].move_name,
                     criticalChance: 0,

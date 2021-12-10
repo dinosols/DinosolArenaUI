@@ -80,7 +80,7 @@ function BattleInterface(props) {
             const battlePubKey = props.battleaccount;
             const battleAccountInfo = await connection.getAccountInfo(battlePubKey);
             const battle = decodeBattle(battleAccountInfo.data);
-    
+
             console.log(battle);
             let playerMove;
             if (battle.player_1.wallet.toString() === window.solana.publicKey.toString()) {
@@ -91,85 +91,86 @@ function BattleInterface(props) {
                 console.log("Waiting for player 1 to move.");
                 playerMove = battle.player_2.current_move;
             }
-    
+
             if (playerMove) {
+                console.log(playerMove);
                 movesProcessed = (playerMove.move_name === "");
             }
-            console.log(JSON.stringify(playerMove));
+            console.log(battle);
         }
 
         console.log("Opponent has moved!");
 
-        let playerMeta = await getGameMetadata(playerPubkey.toString());
-        let opponentMeta = await getGameMetadata(opponentPubkey.toString());
-/*
-        const new_stats = new Stats({
-            health: Math.max(0, playerMeta.currStats.health - opponentMeta.currStats.attack),
-            attack: playerMeta.currStats.attack,
-            defense: playerMeta.currStats.defense,
-            speed: playerMeta.currStats.speed,
-            agility: playerMeta.currStats.agility,
-            rage_points: playerMeta.currStats.rage_points,
-        });
-
-        const newStatsArgs =
-            new UpdateStatsArgs({
-                stats: new_stats,
-            });
-
-        let statsTxnData = Buffer.from(
-            serialize(
-                GAME_METADATA_SCHEMA,
-                newStatsArgs,
-            ),
-        );
-
-        instructions.push(
-            updateStatsInstruction(
-                playerMetaPDA,
-                window.solana.publicKey,
-                statsTxnData,
-                GAME_METADATA_PUBKEY,
-            ),
-        );
-
-        let updateArgs =
-            new UpdateArgs({});
-        let updateTxnData = Buffer.from(
-            serialize(
-                BATTLE_SCHEMA,
-                updateArgs,
-            )
-        );
-
-        instructions.push(
-            updateInstruction(
-                props.battleaccount,
-                playerMetaPDA,
-                opponentMetaPDA,
-                window.solana.publicKey,
-                updateTxnData,
-                BATTLE_PUBKEY,
-            ),
-        );
-
-        const res = await sendTransactionPhantom(
-            connection,
-            window.solana,
-            instructions,
-        );
-
-        try {
-            await connection.confirmTransaction(res.txid, 'max');
-        } catch {
-            // ignore
-        }
-
-        // Force wait for max confirmations
-        await connection.getParsedConfirmedTransaction(res.txid, 'confirmed');
-*/
+        //let playerMeta = await getGameMetadata(playerPubkey.toString());
+        //let opponentMeta = await getGameMetadata(opponentPubkey.toString());
+        /*
+                const new_stats = new Stats({
+                    health: Math.max(0, playerMeta.currStats.health - opponentMeta.currStats.attack),
+                    attack: playerMeta.currStats.attack,
+                    defense: playerMeta.currStats.defense,
+                    speed: playerMeta.currStats.speed,
+                    agility: playerMeta.currStats.agility,
+                    rage_points: playerMeta.currStats.rage_points,
+                });
+        
+                const newStatsArgs =
+                    new UpdateStatsArgs({
+                        stats: new_stats,
+                    });
+        
+                let statsTxnData = Buffer.from(
+                    serialize(
+                        GAME_METADATA_SCHEMA,
+                        newStatsArgs,
+                    ),
+                );
+        
+                instructions.push(
+                    updateStatsInstruction(
+                        playerMetaPDA,
+                        window.solana.publicKey,
+                        statsTxnData,
+                        GAME_METADATA_PUBKEY,
+                    ),
+                );
+        
+                let updateArgs =
+                    new UpdateArgs({});
+                let updateTxnData = Buffer.from(
+                    serialize(
+                        BATTLE_SCHEMA,
+                        updateArgs,
+                    )
+                );
+        
+                instructions.push(
+                    updateInstruction(
+                        props.battleaccount,
+                        playerMetaPDA,
+                        opponentMetaPDA,
+                        window.solana.publicKey,
+                        updateTxnData,
+                        BATTLE_PUBKEY,
+                    ),
+                );
+        
+                const res = await sendTransactionPhantom(
+                    connection,
+                    window.solana,
+                    instructions,
+                );
+        
+                try {
+                    await connection.confirmTransaction(res.txid, 'max');
+                } catch {
+                    // ignore
+                }
+        
+                // Force wait for max confirmations
+                await connection.getParsedConfirmedTransaction(res.txid, 'confirmed');
+        */
         instructions = [];
-/*
+
         let bothMovesDone = false;
         while (!bothMovesDone) {
             const battlePubKey = props.battleaccount;
@@ -182,10 +183,10 @@ function BattleInterface(props) {
                 bothMovesDone = true;
             }
         }
-        */
 
-        playerMeta = await getGameMetadata(playerPubkey.toString());
-        opponentMeta = await getGameMetadata(opponentPubkey.toString());
+
+        let playerMeta = await getGameMetadata(playerPubkey.toString());
+        let opponentMeta = await getGameMetadata(opponentPubkey.toString());
         setPlayerHP(playerMeta.currStats.health);
         setEnemyHP(opponentMeta.currStats.health);
 
@@ -214,7 +215,7 @@ function BattleInterface(props) {
         setTextMessageTwo("");
     };
 
-    function handleAttackClick(name, damage) {
+    async function handleAttackClick(name, damage) {
         // TODO: Single env instance.
         let connection = new Connection("https://api.devnet.solana.com");
         let instructions = [];
@@ -227,73 +228,68 @@ function BattleInterface(props) {
 
         let playerPubkey = new PublicKey(playerdino.dinosolId);
         let opponentPubkey = new PublicKey(props.opponent.dinosolId);
-        getGameMetadata(playerPubkey).then(metadata => {
+        let metadata = await getGameMetadata(playerPubkey)
 
-            let newMove;
-            if (name === playerdino.dinosolAttacks[0].attackName) {
-                newMove = metadata.moves[0];
-            } else if (name === playerdino.dinosolAttacks[1].attackName) {
-                newMove = metadata.moves[1];
-            } else if (name === playerdino.dinosolAttacks[2].attackName) {
-                newMove = metadata.moves[2];
-            } else if (name === playerdino.dinosolAttacks[3].attackName) {
-                newMove = metadata.moves[3];
-            } else {
-                console.log("Invalid move selected.");
-            }
+        let newMove;
+        if (name === playerdino.dinosolAttacks[0].attackName) {
+            newMove = metadata.moves[0];
+        } else if (name === playerdino.dinosolAttacks[1].attackName) {
+            newMove = metadata.moves[1];
+        } else if (name === playerdino.dinosolAttacks[2].attackName) {
+            newMove = metadata.moves[2];
+        } else if (name === playerdino.dinosolAttacks[3].attackName) {
+            newMove = metadata.moves[3];
+        } else {
+            console.log("Invalid move selected.");
+        }
 
-            console.log("Selected Move: " + JSON.stringify(newMove));
+        console.log("Selected Move: " + JSON.stringify(newMove));
 
-            const p1MoveArgs =
-                new SubmitActionArgs({
-                    move: new Move(newMove),
-                });
+        const p1MoveArgs =
+            new SubmitActionArgs({
+                move: new Move(newMove),
+            });
 
-                console.log(p1MoveArgs);
-            let p1TxnData = Buffer.from(
-                serialize(
-                    BATTLE_SCHEMA,
-                    p1MoveArgs,
-                ),
+        console.log(p1MoveArgs);
+        let p1TxnData = Buffer.from(
+            serialize(
+                BATTLE_SCHEMA,
+                p1MoveArgs,
+            ),
+        );
+
+        let playerMetaPDA = await getMetadataPDA(playerPubkey, GAME_METADATA_PUBKEY);
+        let opponentMetaPDA = await getMetadataPDA(opponentPubkey, GAME_METADATA_PUBKEY);
+        instructions.push(
+            submitActionInstruction(
+                props.battleaccount,
+                window.solana.publicKey,
+                playerMetaPDA,
+                opponentMetaPDA,
+                GAME_METADATA_PUBKEY,
+                window.solana.publicKey,
+                p1TxnData,
+                BATTLE_PUBKEY,
+            ),
+        );
+
+        try {
+            let res = await sendTransactionPhantom(
+                connection,
+                window.solana,
+                instructions,
             );
 
-            getMetadataPDA(playerPubkey, GAME_METADATA_PUBKEY).then(playerMetaPDA => {
-                getMetadataPDA(opponentPubkey, GAME_METADATA_PUBKEY).then(opponentMetaPDA => {
-                    instructions.push(
-                        submitActionInstruction(
-                            props.battleaccount,
-                            window.solana.publicKey,
-                            playerMetaPDA,
-                            opponentMetaPDA,
-                            GAME_METADATA_PUBKEY,
-                            window.solana.publicKey,
-                            p1TxnData,
-                            BATTLE_PUBKEY,
-                        ),
-                    );
+            await connection.confirmTransaction(res.txid, 'max')
+            // Force wait for max confirmations
+            await connection.getParsedConfirmedTransaction(res.txid, 'confirmed');
+        } catch (e) {
+            console.log(e);
+            // ignore
+        }
 
-                    try {
-                        sendTransactionPhantom(
-                            connection,
-                            window.solana,
-                            instructions,
-                        ).then(res => {
-
-                            connection.confirmTransaction(res.txid, 'max').then(() => {
-                                // Force wait for max confirmations
-                                connection.getParsedConfirmedTransaction(res.txid, 'confirmed').then(() => {
-                                    // once the state is changed, start enemy turn
-                                    enemyTurn(playerPubkey, opponentPubkey, playerMetaPDA, opponentMetaPDA).then(() => { return; });
-                                });
-                            });
-                        });
-                    } catch (e) {
-                        console.log(e);
-                        // ignore
-                    }
-                });
-            });
-        });
+        // once the state is changed, start enemy turn
+        await enemyTurn(playerPubkey, opponentPubkey, playerMetaPDA, opponentMetaPDA).then(() => { return; });
     };
 
     return (

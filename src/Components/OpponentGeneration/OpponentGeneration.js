@@ -60,12 +60,10 @@ function OpponentGeneration(props) {
 
         if (loading) {
             let battleAccount;
-            if (props.battleaccount)
-            {
+            if (props.battleaccount) {
                 battleAccount = props.battleaccount.toString();
             }
-            else
-            {
+            else {
                 battleAccount = "";
             }
             viewJsx = (
@@ -118,18 +116,18 @@ async function getOpponent(props) {
     console.log(playerMeta);
     let battleAccount;
 
-    if (playerMeta.battleAuthority.toString() === PublicKey.default.toString()) {
+    //if (playerMeta.battleAuthority.toString() === PublicKey.default.toString()) {
         // Create a battle because one does not yet exist.
         console.log("Create a battle because one does not yet exist.");
         battleAccount = await createBattle(props);
-    }
-    else {
-        // Resume an already entered battle.
-        console.log("Resume an already entered battle.");
-        //props.battleupdater(new PublicKey(playerMeta.battleAuthority));
-        battleAccount = new PublicKey(playerMeta.battleAuthority);
-        props.battleupdater(battleAccount);
-    }
+    // }
+    // else {
+    //     // Resume an already entered battle.
+    //     console.log("Resume an already entered battle.");
+    //     //props.battleupdater(new PublicKey(playerMeta.battleAuthority));
+    //     battleAccount = new PublicKey(playerMeta.battleAuthority);
+    //     props.battleupdater(battleAccount);
+    // }
     //console.log(playerMeta.battleAuthority);
     //console.log(props.battleaccount);
 
@@ -194,7 +192,15 @@ async function getOpponent(props) {
     }
 
     let gamemeta = await getGameMetadata(player);
-    let metadataData = await fetch(metadata.data.data.uri);
+    console.log(metadata.data.data.uri);
+    let metadataData = await fetch(metadata.data.data.uri, {
+        //mode: 'no-cors',
+        method: 'GET',
+        headers: {
+            Accept: 'application/json',
+        },
+    });
+    console.log(metadataData.body);
     let data = await metadataData.json();
 
     const opponent = {

@@ -60,7 +60,7 @@ export class PlayerBox extends Component {
                 </div>
                 <div className="ml-3 mr-3 float-right">
                   <h5>
-                    {this.props.playerHP}/{this.props.playerMaxHP}
+                    {Math.floor(this.props.playerHP)}/{Math.floor(this.props.playerMaxHP)}
                   </h5>
                 </div>
               </div>
