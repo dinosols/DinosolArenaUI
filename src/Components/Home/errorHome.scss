@@ -1,0 +1,29 @@
+.error-container {
+    color: #fafafa;
+    height: 100vh;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    width: 80%;
+
+    h1 {
+        font-family: "Gilroy-Bold";
+    }
+
+    h3 {
+        margin-left: auto;
+        margin-right: auto;
+        width: 70%;
+    }
+
+    .error-title {
+        font-size: 5em;
+        padding-top: 5%;
+    }
+
+    .error-exclamation {
+        font-size: 4em;
+        margin-top: 58px;
+    }
+
+}
